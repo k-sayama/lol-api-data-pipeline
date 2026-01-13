@@ -1,0 +1,20 @@
+# League of Legends API プロジェクトの依存関係
+
+# HTTP リクエスト
+requests==2.31.0
+
+# 環境変数管理
+python-dotenv==1.0.0
+
+# データ処理
+pandas==2.1.4
+
+# Web フレームワーク（必要に応じて）
+flask==3.0.0
+
+# テスト
+pytest==7.4.3
+
+# GCP
+google-cloud-storage==2.10.0
+google-cloud-bigquery==3.11.4
