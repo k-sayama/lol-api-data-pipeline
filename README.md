@@ -1,176 +1,131 @@
-# League of Legends API プロジェクト
+# League of Legends API Data Pipeline
 
-このプロジェクトは、Riot Games の League of Legends API を使用するための Python プロジェクトです。
+## 概要
+Riot Games の League of Legends API を利用して  
+**対戦データを収集・保存・分析するデータパイプライン**を構築しました。
 
-## セットアップ
+API から取得したデータを  
+- Cloud Storage に **Rawデータとして保存**
+- BigQuery に **分析用データとして格納**  
+することで、再処理可能かつ分析しやすい構成にしています。
 
-### 1. 仮想環境の作成
+---
 
-```bash
-python3 -m venv venv
+## このプロジェクトを作った理由
+- API → DWH → BI までの **データエンジニアリング全体像を理解したかった**
+- 無料枠で運用可能な **現実的なクラウド構成**を設計したかった
+
+---
+
+## アーキテクチャ
+
+![構成図](./assets/architecture.png)
+```
+Riot API
+  ↓
+Python（データ取得）
+  ↓
+Cloud Storage（Raw JSON）
+  ↓
+BigQuery（構造化データ）
+  ↓
+Looker Studio（可視化）
 ```
 
-### 2. 仮想環境の有効化
+---
 
-**macOS/Linux:**
+## 使用技術
+- Python
+- Riot Games API
+- Google Cloud Storage
+- BigQuery
+
+---
+
+## 設計上のポイント
+- RawデータをGCSに保存し、再処理可能な構成に
+- match_id をキーに BigQuery で重複を防止
+
+---
+
+## セットアップ（簡略）
+
 ```bash
+python -m venv venv
 source venv/bin/activate
-```
-
-**Windows:**
-```bash
-venv\Scripts\activate
-```
-
-### 3. 依存関係のインストール
-
-```bash
 pip install -r requirements.txt
-```
-
-### 4. 環境変数の設定
-
-`env.example` をコピーして `.env` ファイルを作成:
-
-```bash
 cp env.example .env
 ```
 
-`.env` ファイルを編集して、以下を設定:
+`.env` に以下を設定：
 
-```bash
-# Riot Games API設定
-RIOT_API_KEY=your_api_key_here
-
-# Google Cloud Platform設定
-GCS_BUCKET_NAME=lol-api-dev
-GCP_PROJECT_ID=your_project_id_here
-
-# BigQuery設定
-BQ_DATASET_ID=lol_api
-BQ_TABLE_ID=matches
-BQ_LOCATION=asia-northeast1
-
-# Riot API エンドポイント（デフォルト値が設定されているため変更不要）
-RIOT_API_REGION_JP=jp1
-RIOT_API_REGION_ASIA=asia
-
-# テスト用設定（オプション）
-TEST_PUUID=your_test_puuid_here
-TEST_MATCH_LIMIT=3
-
-# GCP 認証（サービスアカウントキーのパス）
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account-key.json
+```env
+RIOT_API_KEY=your_api_key
+GCP_PROJECT_ID=your_project_id
+GCS_BUCKET_NAME=your_bucket_name
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
 ```
 
-**必須の環境変数:**
-- `RIOT_API_KEY`: Riot Games の API キー
-- `GCS_BUCKET_NAME`: GCS バケット名
-- `GCP_PROJECT_ID`: GCP プロジェクトID
-- `GOOGLE_APPLICATION_CREDENTIALS`: GCP サービスアカウントキーのパス
+---
 
-**オプションの環境変数:**
-- `BQ_DATASET_ID`: BigQuery データセットID（デフォルト: `lol_api`）
-- `BQ_TABLE_ID`: BigQuery テーブルID（デフォルト: `matches`）
-- `BQ_LOCATION`: BigQuery ロケーション（デフォルト: `asia-northeast1`）
-- `RIOT_API_REGION_JP`: Riot API 日本リージョン（デフォルト: `jp1`）
-- `RIOT_API_REGION_ASIA`: Riot API アジアリージョン（デフォルト: `asia`）
-- `TEST_PUUID`: テスト用プレイヤー PUUID
-- `TEST_MATCH_LIMIT`: テスト時の取得マッチ数上限（デフォルト: `3`）
-
-### 5. プログラムの実行
+## 実行方法
 
 ```bash
 python src/main.py
 ```
 
-## GCP への保存（オプション）
-
-取得したデータを GCP (Google Cloud Platform) に保存できます。
-
-### 対応ストレージ
-
-- **Cloud Storage**: JSON ファイルとして保存
-- **BigQuery**: 構造化データとして保存（分析に最適）
-
-### セットアップ方法
-
-詳細は [GCP_SETUP.md](GCP_SETUP.md) を参照してください。
-
-簡易セットアップ：
-
-1. GCP プロジェクトを作成
-2. Cloud Storage バケットを作成
-3. BigQuery データセットを作成
-4. サービスアカウントを作成して権限を付与
-5. `.env` ファイルに GCP 設定を追加
-6. `SAVE_TO_GCS=true` または `SAVE_TO_BIGQUERY=true` に設定
-
-### 実行例
+保存先は環境変数で制御できます。
 
 ```bash
-# Cloud Storage に保存
 SAVE_TO_GCS=true python src/main.py
-
-# BigQuery に保存
 SAVE_TO_BIGQUERY=true python src/main.py
-
-# 両方に保存
-SAVE_TO_GCS=true SAVE_TO_BIGQUERY=true python src/main.py
 ```
 
-## Riot API キーの取得方法
+---
 
-1. [Riot Developer Portal](https://developer.riotgames.com/) にアクセス
-2. Riot アカウントでログイン
-3. Development API Key を取得
-4. `.env` ファイルに API キーを設定
+## プロジェクト構成
 
-## プロジェクト構造
-
-```
-lol_api/
+```bash
+lol-api-data-pipline/
 ├── src/
-│   ├── main.py              # メインプログラム
-│   ├── match_id.py          # マッチID取得
-│   ├── match_history.py     # マッチ履歴取得
-│   ├── gcp_storage.py       # Cloud Storage 連携
-│   └── gcp_bigquery.py      # BigQuery 連携
-├── requirements.txt         # Python 依存関係
-├── .env                     # 環境変数（Git管理外）
-├── .gitignore               # Git除外設定
-├── README.md                # このファイル
-└── GCP_SETUP.md             # GCP セットアップガイド
+│   ├── main.py                 # パイプラインのエントリーポイント
+│   ├── master_players.py       # マスターリーグプレイヤー取得
+│   ├── match_id.py             # マッチID取得
+│   ├── match_history.py        # マッチ詳細取得
+│   ├── upload_to_gcs.py        # Cloud Storage保存
+│   ├── download_gcs_file.py    # GCSファイルダウンロード
+│   ├── load_to_bigquery.py     # BigQuery保存
+│   └── remove_duplicates.py    # 重複データ削除
+├── assets/
+│   └── architecture.png        # アーキテクチャ図
+├── requirements.txt
+├── env.example
+├── .gitignore
+└── README.md
 ```
 
-## 使用するライブラリ
+---
 
-- **requests**: HTTP リクエスト用
-- **python-dotenv**: 環境変数管理
-- **pandas**: データ処理
-- **flask**: Web API 構築（オプション）
-- **pytest**: テスト用
-- **google-cloud-storage**: Cloud Storage 連携（オプション）
-- **google-cloud-bigquery**: BigQuery 連携（オプション）
+## 現在できていること
 
-## 機能
+- ローカル環境からのマスターリーグプレイヤー取得
+- マッチID取得
+- マッチ詳細取得
+- GCS / BigQuery への保存
+- Looker Studioでの可視化
 
-### データ取得
-- ✅ マスターリーグランキング取得
-- ✅ マッチID取得
-- ✅ マッチ履歴取得
+---
 
-### データ保存
-- ✅ Cloud Storage（JSON）
-- ✅ BigQuery（構造化データ）
-- ⏳ ローカルファイル保存（予定）
+## 今後の改善予定
 
-### データ分析
-- ⏳ ランキング分析（予定）
-- ⏳ 勝率分析（予定）
-- ⏳ チャンピオン統計（予定）
+- クラウド環境での処理実行(Cloud Run or Cloud Function)
+- RiotAPIのレート制限の対策、データ量が増えた時の対策
+- CI/CDの導入, 定期実行の自動化
+- インフラ構成のIaC化
+- データ品質チェックの追加
+
+---
 
 ## ライセンス
 
 MIT
-
