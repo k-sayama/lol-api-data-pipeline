@@ -9,6 +9,10 @@ API から取得したデータを
 - BigQuery に **分析用データとして格納**  
 することで、再処理可能かつ分析しやすい構成にしています。
 
+実際に約100件の試合データを取得し、結果を分析しました。
+
+**分析結果：[Looker Studioダッシュボード](https://lookerstudio.google.com/reporting/b1bb0726-38df-4ea7-bdfd-07c3d78ca0e2)**
+
 ---
 
 ## このプロジェクトを作った理由
